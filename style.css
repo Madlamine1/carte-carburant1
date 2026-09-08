@@ -1,0 +1,57 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  color: #222;
+}
+
+header {
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+
+h1 {
+  margin: 0 0 5px;
+  font-size: 24px;
+}
+
+header p {
+  margin: 0;
+  color: #666;
+}
+
+main {
+  padding: 12px;
+}
+
+#status {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 6px;
+}
+
+#map {
+  width: 100%;
+  height: calc(100vh - 145px);
+  min-height: 500px;
+  border-radius: 8px;
+}
+
+.station-popup h3 {
+  margin: 0 0 8px;
+}
+
+.station-popup table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.station-popup td {
+  padding: 4px 0;
+}
