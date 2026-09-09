@@ -1,5 +1,5 @@
 const API_URL =
-  "https://kf.kobotoolbox.org/api/v2/assets/aiNmpB3hmyfziTqmJujbVd/data/";
+  "https://broken-fire-1935.lamine0502.workers.dev/";
 
 // Création de la carte
 const map = L.map("map").setView([12.63, -8.0], 7);
