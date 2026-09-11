@@ -326,19 +326,9 @@ async function loadStations() {
     stations.forEach(station => {
 
 
-      // Récupération des coordonnées GPS
-      const coords =
-        station._geolocation ||
-        String(
-          station.Position_GPS || ""
-        )
-          .trim()
-          .split(/\s+/)
-          .map(Number);
-
-
-      const lat = Number(coords[0]);
-      const lon = Number(coords[1]);
+     // Récupération des coordonnées fixes de la station
+const lat = Number(station.latitude_station);
+const lon = Number(station.longitude_station);
 
 
       // Vérification des coordonnées
