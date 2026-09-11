@@ -302,22 +302,76 @@ async function loadStations() {
     }
 
 
-    const data = await response.json();
+   const allStations = data.results || [];
 
 
-    const stations = data.results || [];
+if (!allStations.length) {
+
+  statusBox.textContent =
+    "Aucune station trouvée.";
+
+  return;
+}
 
 
-    if (!stations.length) {
+// --------------------------------------------------------
+// Garder uniquement les nouveaux enregistrements
+// possédant le nom interne de la station et les coordonnées
+// calculées
+// --------------------------------------------------------
 
-      statusBox.textContent =
-        "Aucune station trouvée.";
+const validStations = allStations.filter(station => {
 
-      return;
-    }
+  const lat = Number(station.latitude_station);
+  const lon = Number(station.longitude_station);
+
+  return (
+    station.station &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lon)
+  );
+
+});
 
 
-    const bounds = [];
+// --------------------------------------------------------
+// Pour chaque station, conserver uniquement
+// l'enregistrement le plus récent
+// --------------------------------------------------------
+
+const latestStations = new Map();
+
+
+validStations.forEach(station => {
+
+  const stationCode = station.station;
+
+  const existing = latestStations.get(stationCode);
+
+
+  if (
+    !existing ||
+    new Date(station._submission_time) >
+    new Date(existing._submission_time)
+  ) {
+
+    latestStations.set(
+      stationCode,
+      station
+    );
+
+  }
+
+});
+
+
+// Transformer le résultat en tableau
+const stations = Array.from(
+  latestStations.values()
+);
+
+
+const bounds = [];
 
 
     // --------------------------------------------------------
