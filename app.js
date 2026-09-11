@@ -148,7 +148,23 @@ function createStationIcon(color) {
 // ============================================================
 // 7. FENÊTRE D'INFORMATION DE LA STATION
 // ============================================================
+function stationLabel(value) {
 
+  const labels = {
+    "tinza_express": "Tinza express - 001",
+    "sikasso_wayerma_ii": "Sikasso wayerma II - 002",
+    "taoud_nit___shell_4": "Taoudénit - Shell 4 - 003",
+    "taoud_nit___total1": "Taoudénit - Total1 - 004",
+    "gao_bero_service2": "Gao Bero Service2 - 005",
+    "kayes_sotraka_1___006": "Kayes Sotraka 1 - 006",
+    "s_gou_total2": "Ségou Total2 - 007",
+    "traore_fana2": "Traore Fana2 - 008",
+    "shell_place_can": "Shell Place Can - 009",
+    "total_s_gou1": "Total ségou1 - 010"
+  };
+
+  return labels[value] || value || "Station sans nom";
+}
 function popupFor(station) {
 
   const essence = labelStatus(station.Essence);
@@ -166,7 +182,7 @@ function popupFor(station) {
     <div class="station-popup">
 
       <h3>
-        ⛽ ${station.station || "Station sans nom"}
+        ⛽ ${stationLabel(station.station)}
       </h3>
 
       <table>
