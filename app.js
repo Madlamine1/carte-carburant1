@@ -166,7 +166,7 @@ function popupFor(station) {
     <div class="station-popup">
 
       <h3>
-        ⛽ ${station.Nom_de_la_station || "Station sans nom"}
+        ⛽ ${station.station || "Station sans nom"}
       </h3>
 
       <table>
