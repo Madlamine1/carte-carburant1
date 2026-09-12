@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -49,6 +50,7 @@
             max-width: 550px;
             padding: 9px;
             font-size: 16px;
+            box-sizing: border-box;
         }
 
         #status {
@@ -57,7 +59,7 @@
         }
 
         #map {
-            height: calc(100vh - 245px);
+            height: calc(100vh - 310px);
             min-height: 500px;
         }
 
@@ -72,6 +74,7 @@
 
 
 <div id="filters">
+
 
     <div class="filter">
 
@@ -129,6 +132,24 @@
 
     </div>
 
+
+    <div class="filter">
+
+        <label>
+            Station
+        </label>
+
+        <select id="stationSelect">
+
+            <option value="">
+                Toutes les stations
+            </option>
+
+        </select>
+
+    </div>
+
+
 </div>
 
 
@@ -145,11 +166,12 @@
 </script>
 
 
-<script src="admin.js?v=4"></script>
+<script src="admin.js?v=5"></script>
 
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 
 
 </body>
 
 </html>
+```
