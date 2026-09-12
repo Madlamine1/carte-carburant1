@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Carte du carburant</title>
 
@@ -12,6 +18,7 @@
     >
 
     <style>
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -53,63 +60,96 @@
             height: calc(100vh - 245px);
             min-height: 500px;
         }
+
     </style>
+
 </head>
+
 
 <body>
 
 <h1>Carte du carburant</h1>
 
+
 <div id="filters">
 
     <div class="filter">
+
         <label id="regionLabel">
             Région / District
         </label>
 
         <select id="regionSelect">
+
             <option value="">
                 Toutes les régions
             </option>
+
         </select>
+
     </div>
 
+
     <div class="filter">
+
         <label id="cercleLabel">
             Cercle / Arrondissement
         </label>
 
-        <select id="cercleSelect" disabled>
+        <select
+            id="cercleSelect"
+            disabled
+        >
+
             <option value="">
                 Tous
             </option>
+
         </select>
+
     </div>
 
+
     <div class="filter">
+
         <label id="communeLabel">
             Commune / Quartier
         </label>
 
-        <select id="communeSelect" disabled>
+        <select
+            id="communeSelect"
+            disabled
+        >
+
             <option value="">
                 Tous
             </option>
+
         </select>
+
     </div>
 
 </div>
+
 
 <div id="status">
     Chargement des stations...
 </div>
 
+
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="admin.js"></script>
-<script src="app.js"></script>
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script src="admin.js?v=4"></script>
+
+<script src="app.js?v=4"></script>
+
 
 </body>
+
 </html>
