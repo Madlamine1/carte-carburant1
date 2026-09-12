@@ -1,33 +1,98 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Carte du carburant</title>
+    <title>Carte du carburant</title>
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  >
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
 
-  <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin: 15px;
+            font-size: 24px;
+        }
+
+        #filters {
+            padding: 10px 15px;
+            background: #f5f5f5;
+        }
+
+        .filter {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        select {
+            width: 100%;
+            max-width: 500px;
+            padding: 9px;
+            font-size: 16px;
+        }
+
+        #status {
+            padding: 8px 15px;
+            font-weight: bold;
+        }
+
+        #map {
+            height: calc(100vh - 230px);
+            min-height: 500px;
+        }
+    </style>
 </head>
 
 <body>
 
-  <header>
-    <h1>Carte du carburant</h1>
-    <p>Disponibilité des carburants dans les stations</p>
-  </header>
+<h1>Carte du carburant</h1>
 
-  <main>
-    <div id="status">Chargement des stations...</div>
-    <div id="map"></div>
-  </main>
+<div id="filters">
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+    <div class="filter">
+        <label id="regionLabel">Région / District</label>
+        <select id="regionSelect">
+            <option value="">Toutes les régions</option>
+        </select>
+    </div>
+
+    <div class="filter">
+        <label id="cercleLabel">Cercle / Arrondissement</label>
+        <select id="cercleSelect">
+            <option value="">Tous</option>
+        </select>
+    </div>
+
+    <div class="filter">
+        <label id="communeLabel">Commune / Quartier</label>
+        <select id="communeSelect">
+            <option value="">Tous</option>
+        </select>
+    </div>
+
+</div>
+
+<div id="status">Chargement des stations...</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="admin.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
