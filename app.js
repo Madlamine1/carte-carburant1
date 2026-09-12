@@ -1,22 +1,48 @@
 const API_URL =
     "https://broken-fire-1935.lamine0502.workers.dev/";
 
-const map = L.map("map").setView([12.63, -8.0], 7);
+
+// =====================================================
+// CARTE
+// =====================================================
+
+const map = L.map("map").setView(
+    [12.63, -8.0],
+    7
+);
 
 L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     {
-        attribution: "&copy; OpenStreetMap contributors"
+        attribution:
+            "&copy; OpenStreetMap contributors"
     }
 ).addTo(map);
 
-let markersLayer = L.layerGroup().addTo(map);
+
+let markersLayer =
+    L.layerGroup().addTo(map);
 
 let allStations = [];
 
-const regionSelect = document.getElementById("regionSelect");
-const cercleSelect = document.getElementById("cercleSelect");
-const communeSelect = document.getElementById("communeSelect");
+
+// =====================================================
+// FILTRES
+// =====================================================
+
+const regionSelect =
+    document.getElementById("regionSelect");
+
+const cercleSelect =
+    document.getElementById("cercleSelect");
+
+const communeSelect =
+    document.getElementById("communeSelect");
+
+
+// =====================================================
+// STATUT CARBURANT
+// =====================================================
 
 function labelStatus(value) {
 
@@ -38,6 +64,11 @@ function labelStatus(value) {
 
     return "⚪ Non renseigné";
 }
+
+
+// =====================================================
+// COULEUR DU MARQUEUR
+// =====================================================
 
 function markerColor(station) {
 
@@ -61,7 +92,9 @@ function markerColor(station) {
 
     if (
         values.every(
-            v => v === "indisponible" || !v
+            value =>
+                value === "indisponible" ||
+                !value
         )
     ) {
         return "red";
@@ -70,56 +103,73 @@ function markerColor(station) {
     return "gray";
 }
 
+
+// =====================================================
+// NOMS DES STATIONS
+// =====================================================
+
+const stationNames = {
+
+    tinza_express:
+        "Tinza express - 001",
+
+    sikasso_wayerma_ii:
+        "Sikasso wayerma II - 002",
+
+    taoud_nit___shell_4:
+        "Taoudénit - Shell 4 - 003",
+
+    taoud_nit___total1:
+        "Taoudénit - Total1 - 004",
+
+    gao_bero_service2:
+        "Gao Bero Service2 - 005",
+
+    kayes_sotraka_1___006:
+        "Kayes Sotraka 1 - 006",
+
+    s_gou_total2:
+        "Ségou Total2 - 007",
+
+    traore_fana2:
+        "Traore Fana2 - 008",
+
+    shell_place_can:
+        "Shell Place Can - 009",
+
+    total_s_gou1:
+        "Total ségou1 - 010"
+};
+
+
 function stationLabel(station) {
 
-    const labels = {
-
-        tinza_express:
-            "Tinza express - 001",
-
-        sikasso_wayerma_ii:
-            "Sikasso wayerma II - 002",
-
-        taoud_nit___shell_4:
-            "Taoudénit - Shell 4 - 003",
-
-        taoud_nit___total1:
-            "Taoudénit - Total1 - 004",
-
-        gao_bero_service2:
-            "Gao Bero Service2 - 005",
-
-        kayes_sotraka_1___006:
-            "Kayes Sotraka 1 - 006",
-
-        s_gou_total2:
-            "Ségou Total2 - 007",
-
-        traore_fana2:
-            "Traore Fana2 - 008",
-
-        shell_place_can:
-            "Shell Place Can - 009",
-
-        total_s_gou1:
-            "Total ségou1 - 010"
-    };
-
-    return labels[station.station] ||
-           station.station;
+    return (
+        stationNames[station.station] ||
+        station.station
+    );
 }
+
+
+// =====================================================
+// POPUP
+// =====================================================
 
 function popupFor(station) {
 
     return `
-        <b>${stationLabel(station)}</b><br><br>
+        <b>${stationLabel(station)}</b>
+
+        <br><br>
 
         Essence :
         ${labelStatus(station.Essence)}
+
         <br>
 
         Gasoil :
         ${labelStatus(station.Gasoil)}
+
         <br>
 
         Pétrole :
@@ -128,90 +178,147 @@ function popupFor(station) {
         <br><br>
 
         Mise à jour :
-        ${station._submission_time
-            ? new Date(
-                station._submission_time
-              ).toLocaleString("fr-FR")
-            : "Non renseignée"
+        ${
+            station._submission_time
+                ? new Date(
+                    station._submission_time
+                  ).toLocaleString("fr-FR")
+                : "Non renseignée"
         }
     `;
 }
 
+
+// =====================================================
+// MARQUEUR
+// =====================================================
+
 function addMarker(station) {
 
-    const color = markerColor(station);
+    const color =
+        markerColor(station);
 
-    const icon = L.divIcon({
+    const icon =
+        L.divIcon({
 
-        className: "",
+            className: "",
 
-        html: `
-            <div style="
-                background:${color};
-                width:32px;
-                height:32px;
-                border-radius:50%;
-                border:3px solid white;
-                box-shadow:0 0 5px #555;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:17px;
-            ">⛽</div>
-        `,
+            html: `
+                <div style="
+                    background:${color};
+                    width:32px;
+                    height:32px;
+                    border-radius:50%;
+                    border:3px solid white;
+                    box-shadow:0 0 5px #555;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:17px;
+                ">
+                    ⛽
+                </div>
+            `,
 
-        iconSize: [38, 38],
+            iconSize: [38, 38],
 
-        iconAnchor: [19, 19]
-    });
+            iconAnchor: [19, 19]
+        });
 
     L.marker(
         [
-            Number(station.latitude_station),
-            Number(station.longitude_station)
+            Number(
+                station.latitude_station
+            ),
+
+            Number(
+                station.longitude_station
+            )
         ],
-        { icon }
+        {
+            icon: icon
+        }
     )
-    .bindPopup(popupFor(station))
+    .bindPopup(
+        popupFor(station)
+    )
     .addTo(markersLayer);
 }
+
+
+// =====================================================
+// REGIONS
+// =====================================================
 
 function fillRegions() {
 
     regionSelect.innerHTML =
-        `<option value="">Toutes les régions</option>`;
+        `
+        <option value="">
+            Toutes les régions
+        </option>
+        `;
 
-    ADMIN_DATA.forEach(region => {
+    ADMIN_DATA.forEach(
+        region => {
 
-        const option =
-            document.createElement("option");
+            const option =
+                document.createElement(
+                    "option"
+                );
 
-        option.value = region.code;
+            option.value =
+                region.code;
 
-        option.textContent = region.name;
+            option.textContent =
+                region.name;
 
-        regionSelect.appendChild(option);
-    });
+            regionSelect.appendChild(
+                option
+            );
+        }
+    );
 }
 
-function fillCercles(regionCode) {
+
+// =====================================================
+// CERCLES / ARRONDISSEMENTS
+// =====================================================
+
+function fillCercles(
+    regionCode
+) {
 
     cercleSelect.innerHTML =
-        `<option value="">Tous</option>`;
+        `
+        <option value="">
+            Tous
+        </option>
+        `;
 
     communeSelect.innerHTML =
-        `<option value="">Tous</option>`;
+        `
+        <option value="">
+            Tous
+        </option>
+        `;
+
+    cercleSelect.disabled =
+        !regionCode;
+
+    communeSelect.disabled =
+        true;
 
     if (!regionCode) {
 
-        cercleSelect.disabled = true;
-
-        communeSelect.disabled = true;
-
-        document.getElementById("cercleLabel").textContent =
+        document.getElementById(
+            "cercleLabel"
+        ).textContent =
             "Cercle / Arrondissement";
 
-        document.getElementById("communeLabel").textContent =
+        document.getElementById(
+            "communeLabel"
+        ).textContent =
             "Commune / Quartier";
 
         return;
@@ -222,49 +329,84 @@ function fillCercles(regionCode) {
             r => r.code === regionCode
         );
 
-    if (!region) return;
+    if (!region) {
+        return;
+    }
 
-    cercleSelect.disabled = false;
+    if (
+        region.type ===
+        "district"
+    ) {
 
-    if (region.type === "district") {
-
-        document.getElementById("cercleLabel").textContent =
+        document.getElementById(
+            "cercleLabel"
+        ).textContent =
             "Arrondissement";
 
-        document.getElementById("communeLabel").textContent =
+        document.getElementById(
+            "communeLabel"
+        ).textContent =
             "Quartier";
 
     } else {
 
-        document.getElementById("cercleLabel").textContent =
+        document.getElementById(
+            "cercleLabel"
+        ).textContent =
             "Cercle";
 
-        document.getElementById("communeLabel").textContent =
+        document.getElementById(
+            "communeLabel"
+        ).textContent =
             "Commune";
     }
 
-    region.cercles.forEach(cercle => {
 
-        const option =
-            document.createElement("option");
+    region.cercles.forEach(
+        cercle => {
 
-        option.value = cercle.code;
+            const option =
+                document.createElement(
+                    "option"
+                );
 
-        option.textContent = cercle.name;
+            option.value =
+                cercle.code;
 
-        cercleSelect.appendChild(option);
-    });
+            option.textContent =
+                cercle.name;
+
+            cercleSelect.appendChild(
+                option
+            );
+        }
+    );
 }
 
-function fillCommunes(regionCode, cercleCode) {
+
+// =====================================================
+// COMMUNES / QUARTIERS
+// =====================================================
+
+function fillCommunes(
+    regionCode,
+    cercleCode
+) {
 
     communeSelect.innerHTML =
-        `<option value="">Tous</option>`;
+        `
+        <option value="">
+            Tous
+        </option>
+        `;
 
-    if (!regionCode || !cercleCode) {
+    communeSelect.disabled =
+        !cercleCode;
 
-        communeSelect.disabled = true;
-
+    if (
+        !regionCode ||
+        !cercleCode
+    ) {
         return;
     }
 
@@ -273,29 +415,44 @@ function fillCommunes(regionCode, cercleCode) {
             r => r.code === regionCode
         );
 
-    if (!region) return;
+    if (!region) {
+        return;
+    }
 
     const cercle =
         region.cercles.find(
             c => c.code === cercleCode
         );
 
-    if (!cercle) return;
+    if (!cercle) {
+        return;
+    }
 
-    communeSelect.disabled = false;
+    cercle.communes.forEach(
+        commune => {
 
-    cercle.communes.forEach(commune => {
+            const option =
+                document.createElement(
+                    "option"
+                );
 
-        const option =
-            document.createElement("option");
+            option.value =
+                commune.code;
 
-        option.value = commune.code;
+            option.textContent =
+                commune.name;
 
-        option.textContent = commune.name;
-
-        communeSelect.appendChild(option);
-    });
+            communeSelect.appendChild(
+                option
+            );
+        }
+    );
 }
+
+
+// =====================================================
+// FILTRAGE DES STATIONS
+// =====================================================
 
 function getFilteredStations() {
 
@@ -308,37 +465,56 @@ function getFilteredStations() {
     const communeCode =
         communeSelect.value;
 
-    return allStations.filter(station => {
 
-        const admin =
-            STATION_ADMIN[station.station];
+    return allStations.filter(
+        station => {
 
-        if (!admin) return false;
+            const admin =
+                STATION_ADMIN[
+                    station.station
+                ];
 
-        if (
-            regionCode &&
-            admin.region !== regionCode
-        ) {
-            return false;
+            if (!admin) {
+                return false;
+            }
+
+
+            if (
+                regionCode &&
+                admin.region !==
+                regionCode
+            ) {
+                return false;
+            }
+
+
+            if (
+                cercleCode &&
+                admin.cercle !==
+                cercleCode
+            ) {
+                return false;
+            }
+
+
+            if (
+                communeCode &&
+                admin.commune !==
+                communeCode
+            ) {
+                return false;
+            }
+
+
+            return true;
         }
-
-        if (
-            cercleCode &&
-            admin.cercle !== cercleCode
-        ) {
-            return false;
-        }
-
-        if (
-            communeCode &&
-            admin.commune !== communeCode
-        ) {
-            return false;
-        }
-
-        return true;
-    });
+    );
 }
+
+
+// =====================================================
+// AFFICHAGE
+// =====================================================
 
 function displayStations() {
 
@@ -347,31 +523,59 @@ function displayStations() {
     const stations =
         getFilteredStations();
 
-    stations.forEach(addMarker);
 
-    document.getElementById("status").textContent =
+    stations.forEach(
+        addMarker
+    );
+
+
+    document.getElementById(
+        "status"
+    ).textContent =
         `${stations.length} station(s) affichée(s)`;
 
-    if (stations.length > 0) {
+
+    if (
+        stations.length > 0
+    ) {
 
         const bounds =
             L.latLngBounds(
-                stations.map(station => [
-                    Number(station.latitude_station),
-                    Number(station.longitude_station)
-                ])
+                stations.map(
+                    station => [
+
+                        Number(
+                            station.latitude_station
+                        ),
+
+                        Number(
+                            station.longitude_station
+                        )
+                    ]
+                )
             );
+
 
         map.fitBounds(
             bounds,
-            { padding: [40, 40] }
+            {
+                padding: [
+                    40,
+                    40
+                ]
+            }
         );
     }
 }
 
+
+// =====================================================
+// EVENEMENTS DES FILTRES
+// =====================================================
+
 regionSelect.addEventListener(
     "change",
-    () => {
+    function () {
 
         fillCercles(
             regionSelect.value
@@ -381,9 +585,10 @@ regionSelect.addEventListener(
     }
 );
 
+
 cercleSelect.addEventListener(
     "change",
-    () => {
+    function () {
 
         fillCommunes(
             regionSelect.value,
@@ -394,65 +599,112 @@ cercleSelect.addEventListener(
     }
 );
 
+
 communeSelect.addEventListener(
     "change",
-    displayStations
+    function () {
+
+        displayStations();
+    }
 );
+
+
+// =====================================================
+// CHARGEMENT KOBO
+// =====================================================
 
 async function loadStations() {
 
     try {
 
         const response =
-            await fetch(API_URL);
+            await fetch(
+                API_URL
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
+
 
         const data =
             await response.json();
 
+
         const records =
             data.results || [];
 
-        const latest =
-            {};
 
-        records.forEach(record => {
+        const latest = {};
 
-            if (
-                !record.station ||
-                !record.latitude_station ||
-                !record.longitude_station
-            ) {
-                return;
+
+        records.forEach(
+            record => {
+
+                if (
+                    !record.station ||
+                    !record.latitude_station ||
+                    !record.longitude_station
+                ) {
+                    return;
+                }
+
+
+                const previous =
+                    latest[
+                        record.station
+                    ];
+
+
+                if (
+                    !previous ||
+                    new Date(
+                        record._submission_time
+                    ) >
+                    new Date(
+                        previous._submission_time
+                    )
+                ) {
+
+                    latest[
+                        record.station
+                    ] = record;
+                }
             }
+        );
 
-            const old =
-                latest[record.station];
-
-            if (
-                !old ||
-                new Date(record._submission_time)
-                >
-                new Date(old._submission_time)
-            ) {
-
-                latest[record.station] =
-                    record;
-            }
-        });
 
         allStations =
-            Object.values(latest);
+            Object.values(
+                latest
+            );
+
 
         displayStations();
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
-        document.getElementById("status").textContent =
+
+        document.getElementById(
+            "status"
+        ).textContent =
             "Impossible de charger les stations.";
     }
 }
+
+
+// =====================================================
+// DEMARRAGE
+// =====================================================
 
 fillRegions();
 
