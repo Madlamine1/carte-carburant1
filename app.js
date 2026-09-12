@@ -1,11 +1,6 @@
 const API_URL =
     "https://broken-fire-1935.lamine0502.workers.dev/";
 
-
-// =====================================================
-// CARTE
-// =====================================================
-
 const map = L.map("map").setView(
     [12.63, -8.0],
     7
@@ -19,16 +14,10 @@ L.tileLayer(
     }
 ).addTo(map);
 
-
 let markersLayer =
     L.layerGroup().addTo(map);
 
 let allStations = [];
-
-
-// =====================================================
-// FILTRES
-// =====================================================
 
 const regionSelect =
     document.getElementById("regionSelect");
@@ -39,10 +28,13 @@ const cercleSelect =
 const communeSelect =
     document.getElementById("communeSelect");
 
+const statusElement =
+    document.getElementById("status");
 
-// =====================================================
-// STATUT CARBURANT
-// =====================================================
+
+/* =========================
+   STATUT CARBURANT
+========================= */
 
 function labelStatus(value) {
 
@@ -65,10 +57,6 @@ function labelStatus(value) {
     return "⚪ Non renseigné";
 }
 
-
-// =====================================================
-// COULEUR DU MARQUEUR
-// =====================================================
 
 function markerColor(station) {
 
@@ -104,9 +92,9 @@ function markerColor(station) {
 }
 
 
-// =====================================================
-// NOMS DES STATIONS
-// =====================================================
+/* =========================
+   NOMS DES STATIONS
+========================= */
 
 const stationNames = {
 
@@ -146,14 +134,15 @@ function stationLabel(station) {
 
     return (
         stationNames[station.station] ||
-        station.station
+        station.station ||
+        "Station inconnue"
     );
 }
 
 
-// =====================================================
-// POPUP
-// =====================================================
+/* =========================
+   POPUP
+========================= */
 
 function popupFor(station) {
 
@@ -189,11 +178,26 @@ function popupFor(station) {
 }
 
 
-// =====================================================
-// MARQUEUR
-// =====================================================
+/* =========================
+   MARQUEUR
+========================= */
 
 function addMarker(station) {
+
+    const lat =
+        Number(station.latitude_station);
+
+    const lon =
+        Number(station.longitude_station);
+
+    if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon) ||
+        lat === 0 ||
+        lon === 0
+    ) {
+        return;
+    }
 
     const color =
         markerColor(station);
@@ -226,15 +230,7 @@ function addMarker(station) {
         });
 
     L.marker(
-        [
-            Number(
-                station.latitude_station
-            ),
-
-            Number(
-                station.longitude_station
-            )
-        ],
+        [lat, lon],
         {
             icon: icon
         }
@@ -246,9 +242,9 @@ function addMarker(station) {
 }
 
 
-// =====================================================
-// REGIONS
-// =====================================================
+/* =========================
+   FILTRES ADMINISTRATIFS
+========================= */
 
 function fillRegions() {
 
@@ -258,6 +254,15 @@ function fillRegions() {
             Toutes les régions
         </option>
         `;
+
+    if (
+        typeof ADMIN_DATA === "undefined"
+    ) {
+        console.error(
+            "ADMIN_DATA est introuvable."
+        );
+        return;
+    }
 
     ADMIN_DATA.forEach(
         region => {
@@ -280,10 +285,6 @@ function fillRegions() {
     );
 }
 
-
-// =====================================================
-// CERCLES / ARRONDISSEMENTS
-// =====================================================
 
 function fillCercles(
     regionCode
@@ -334,8 +335,7 @@ function fillCercles(
     }
 
     if (
-        region.type ===
-        "district"
+        region.type === "district"
     ) {
 
         document.getElementById(
@@ -361,6 +361,9 @@ function fillCercles(
             "Commune";
     }
 
+    if (!region.cercles) {
+        return;
+    }
 
     region.cercles.forEach(
         cercle => {
@@ -383,10 +386,6 @@ function fillCercles(
     );
 }
 
-
-// =====================================================
-// COMMUNES / QUARTIERS
-// =====================================================
 
 function fillCommunes(
     regionCode,
@@ -428,6 +427,10 @@ function fillCommunes(
         return;
     }
 
+    if (!cercle.communes) {
+        return;
+    }
+
     cercle.communes.forEach(
         commune => {
 
@@ -450,9 +453,9 @@ function fillCommunes(
 }
 
 
-// =====================================================
-// FILTRAGE DES STATIONS
-// =====================================================
+/* =========================
+   FILTRAGE DES STATIONS
+========================= */
 
 function getFilteredStations() {
 
@@ -466,6 +469,20 @@ function getFilteredStations() {
         communeSelect.value;
 
 
+    /*
+       Aucun filtre :
+       toutes les stations sont affichées.
+    */
+
+    if (
+        !regionCode &&
+        !cercleCode &&
+        !communeCode
+    ) {
+        return allStations;
+    }
+
+
     return allStations.filter(
         station => {
 
@@ -473,6 +490,14 @@ function getFilteredStations() {
                 STATION_ADMIN[
                     station.station
                 ];
+
+            /*
+               Si la station n'a pas encore
+               de rattachement administratif,
+               elle reste visible seulement
+               lorsqu'aucun filtre administratif
+               plus précis ne la concerne.
+            */
 
             if (!admin) {
                 return false;
@@ -505,16 +530,15 @@ function getFilteredStations() {
                 return false;
             }
 
-
             return true;
         }
     );
 }
 
 
-// =====================================================
-// AFFICHAGE
-// =====================================================
+/* =========================
+   AFFICHAGE
+========================= */
 
 function displayStations() {
 
@@ -523,15 +547,12 @@ function displayStations() {
     const stations =
         getFilteredStations();
 
-
     stations.forEach(
         addMarker
     );
 
 
-    document.getElementById(
-        "status"
-    ).textContent =
+    statusElement.textContent =
         `${stations.length} station(s) affichée(s)`;
 
 
@@ -539,39 +560,59 @@ function displayStations() {
         stations.length > 0
     ) {
 
-        const bounds =
-            L.latLngBounds(
-                stations.map(
-                    station => [
-
+        const validStations =
+            stations.filter(
+                station =>
+                    Number.isFinite(
                         Number(
                             station.latitude_station
-                        ),
-
+                        )
+                    ) &&
+                    Number.isFinite(
                         Number(
                             station.longitude_station
                         )
-                    ]
-                )
+                    )
             );
 
 
-        map.fitBounds(
-            bounds,
-            {
-                padding: [
-                    40,
-                    40
-                ]
-            }
-        );
+        if (
+            validStations.length > 0
+        ) {
+
+            const bounds =
+                L.latLngBounds(
+                    validStations.map(
+                        station => [
+
+                            Number(
+                                station.latitude_station
+                            ),
+
+                            Number(
+                                station.longitude_station
+                            )
+                        ]
+                    )
+                );
+
+            map.fitBounds(
+                bounds,
+                {
+                    padding: [
+                        40,
+                        40
+                    ]
+                }
+            );
+        }
     }
 }
 
 
-// =====================================================
-// EVENEMENTS DES FILTRES
-// =====================================================
+/* =========================
+   EVENEMENTS DES FILTRES
+========================= */
 
 regionSelect.addEventListener(
     "change",
@@ -609,17 +650,21 @@ communeSelect.addEventListener(
 );
 
 
-// =====================================================
-// CHARGEMENT KOBO
-// =====================================================
+/* =========================
+   CHARGEMENT KOBO
+========================= */
 
 async function loadStations() {
 
     try {
 
+        statusElement.textContent =
+            "Chargement des stations...";
+
+
         const response =
             await fetch(
-                API_URL
+                API_URL + "?t=" + Date.now()
             );
 
 
@@ -644,6 +689,11 @@ async function loadStations() {
 
         records.forEach(
             record => {
+
+                /*
+                   On accepte uniquement
+                   le nouveau format.
+                */
 
                 if (
                     !record.station ||
@@ -684,33 +734,44 @@ async function loadStations() {
             );
 
 
+        console.log(
+            "Stations chargées :",
+            allStations
+        );
+
+
         displayStations();
 
 
     } catch (error) {
 
         console.error(
+            "Erreur de chargement :",
             error
         );
 
 
-        document.getElementById(
-            "status"
-        ).textContent =
+        statusElement.textContent =
             "Impossible de charger les stations.";
     }
 }
 
 
-// =====================================================
-// DEMARRAGE
-// =====================================================
+/* =========================
+   INITIALISATION
+========================= */
 
 fillRegions();
 
 fillCercles("");
 
 loadStations();
+
+
+/*
+   Actualisation automatique
+   toutes les 2 minutes.
+*/
 
 setInterval(
     loadStations,
