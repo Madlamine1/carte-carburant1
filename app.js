@@ -1,834 +1,466 @@
-// ============================================================
-// CARTE CARBURANT
-// Source des données : KoboToolbox via Cloudflare Worker
-// ============================================================
-
-
-// ============================================================
-// 1. ADRESSE DU WORKER
-// ============================================================
-
 const API_URL =
-  "https://broken-fire-1935.lamine0502.workers.dev/";
+    "https://broken-fire-1935.lamine0502.workers.dev/";
 
-
-// ============================================================
-// 2. CRÉATION DE LA CARTE
-// ============================================================
-
-const map =
-  L.map("map").setView(
-    [12.63, -8.0],
-    7
-  );
-
-
-// ============================================================
-// 3. FOND DE CARTE OPENSTREETMAP
-// ============================================================
+const map = L.map("map").setView([12.63, -8.0], 7);
 
 L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  {
-    maxZoom: 19,
-    attribution:
-      "&copy; OpenStreetMap contributors"
-  }
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        attribution: "&copy; OpenStreetMap contributors"
+    }
 ).addTo(map);
 
+let markersLayer = L.layerGroup().addTo(map);
 
-// ============================================================
-// 4. ZONE DE STATUT
-// ============================================================
+let allStations = [];
 
-const statusBox =
-  document.getElementById("status");
-
-
-// ============================================================
-// 5. INTERPRÉTATION DES STATUTS
-// ============================================================
+const regionSelect = document.getElementById("regionSelect");
+const cercleSelect = document.getElementById("cercleSelect");
+const communeSelect = document.getElementById("communeSelect");
 
 function labelStatus(value) {
 
-  const v =
-    String(value || "")
-      .toLowerCase();
+    if (value === "disponible") {
+        return "🟢 Disponible";
+    }
 
+    if (
+        value === "stack_limit" ||
+        value === "stock_limite" ||
+        value === "limite"
+    ) {
+        return "🟠 Stock limité";
+    }
 
-  if (v === "disponible") {
+    if (value === "indisponible") {
+        return "🔴 Indisponible";
+    }
 
-    return {
-      text: "Disponible",
-      icon: "🟢"
-    };
-
-  }
-
-
-  if (
-    v === "stack_limit" ||
-    v === "stock_limite" ||
-    v === "limite"
-  ) {
-
-    return {
-      text: "Stock limité",
-      icon: "🟠"
-    };
-
-  }
-
-
-  if (v === "indisponible") {
-
-    return {
-      text: "Indisponible",
-      icon: "🔴"
-    };
-
-  }
-
-
-  return {
-    text: "Non renseigné",
-    icon: "⚪"
-  };
-
+    return "⚪ Non renseigné";
 }
-
-
-// ============================================================
-// 6. COULEUR DU MARQUEUR
-// ============================================================
 
 function markerColor(station) {
 
-  const essence =
-    String(station.Essence || "")
-      .toLowerCase();
+    const values = [
+        station.Essence,
+        station.Gasoil,
+        station.Petrole
+    ];
 
-  const gasoil =
-    String(station.Gasoil || "")
-      .toLowerCase();
+    if (values.includes("disponible")) {
+        return "green";
+    }
 
-  const petrole =
-    String(station.Petrole || "")
-      .toLowerCase();
+    if (
+        values.includes("stack_limit") ||
+        values.includes("stock_limite") ||
+        values.includes("limite")
+    ) {
+        return "orange";
+    }
 
+    if (
+        values.every(
+            v => v === "indisponible" || !v
+        )
+    ) {
+        return "red";
+    }
 
-  // ----------------------------------------------------------
-  // Au moins un carburant disponible
-  // ----------------------------------------------------------
-
-  if (
-    essence === "disponible" ||
-    gasoil === "disponible" ||
-    petrole === "disponible"
-  ) {
-
-    return "green";
-
-  }
-
-
-  // ----------------------------------------------------------
-  // Aucun disponible, mais au moins un stock limité
-  // ----------------------------------------------------------
-
-  if (
-    essence === "stack_limit" ||
-    gasoil === "stack_limit" ||
-    petrole === "stack_limit"
-  ) {
-
-    return "orange";
-
-  }
-
-
-  // ----------------------------------------------------------
-  // Tous indisponibles ou non renseignés
-  // ----------------------------------------------------------
-
-  if (
-    (essence === "indisponible" || essence === "") &&
-    (gasoil === "indisponible" || gasoil === "") &&
-    (petrole === "indisponible" || petrole === "")
-  ) {
-
-    return "red";
-
-  }
-
-
-  return "gray";
-
+    return "gray";
 }
 
+function stationLabel(station) {
 
-// ============================================================
-// 7. ICÔNE DE LA STATION
-// ============================================================
+    const labels = {
 
-function createStationIcon(color) {
+        tinza_express:
+            "Tinza express - 001",
 
-  return L.divIcon({
+        sikasso_wayerma_ii:
+            "Sikasso wayerma II - 002",
 
-    className:
-      "station-marker",
+        taoud_nit___shell_4:
+            "Taoudénit - Shell 4 - 003",
 
-    html: `
-      <div style="
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: ${color};
-        border: 3px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-      ">
-        ⛽
-      </div>
-    `,
+        taoud_nit___total1:
+            "Taoudénit - Total1 - 004",
 
-    iconSize: [
-      34,
-      34
-    ],
+        gao_bero_service2:
+            "Gao Bero Service2 - 005",
 
-    iconAnchor: [
-      17,
-      17
-    ],
+        kayes_sotraka_1___006:
+            "Kayes Sotraka 1 - 006",
 
-    popupAnchor: [
-      0,
-      -17
-    ]
+        s_gou_total2:
+            "Ségou Total2 - 007",
 
-  });
+        traore_fana2:
+            "Traore Fana2 - 008",
 
+        shell_place_can:
+            "Shell Place Can - 009",
+
+        total_s_gou1:
+            "Total ségou1 - 010"
+    };
+
+    return labels[station.station] ||
+           station.station;
 }
-
-
-// ============================================================
-// 8. NOM COMPLET DE LA STATION
-// ============================================================
-
-function stationLabel(value) {
-
-  const labels = {
-
-    "tinza_express":
-      "Tinza express - 001",
-
-    "sikasso_wayerma_ii":
-      "Sikasso wayerma II - 002",
-
-    "taoud_nit___shell_4":
-      "Taoudénit - Shell 4 - 003",
-
-    "taoud_nit___total1":
-      "Taoudénit - Total1 - 004",
-
-    "gao_bero_service2":
-      "Gao Bero Service2 - 005",
-
-    "kayes_sotraka_1___006":
-      "Kayes Sotraka 1 - 006",
-
-    "s_gou_total2":
-      "Ségou Total2 - 007",
-
-    "traore_fana2":
-      "Traore Fana2 - 008",
-
-    "shell_place_can":
-      "Shell Place Can - 009",
-
-    "total_s_gou1":
-      "Total ségou1 - 010"
-
-  };
-
-
-  return (
-    labels[value] ||
-    value ||
-    "Station sans nom"
-  );
-
-}
-
-
-// ============================================================
-// 9. FENÊTRE D'INFORMATION
-// ============================================================
 
 function popupFor(station) {
 
-  const essence =
-    labelStatus(
-      station.Essence
-    );
+    return `
+        <b>${stationLabel(station)}</b><br><br>
 
-  const gasoil =
-    labelStatus(
-      station.Gasoil
-    );
+        Essence :
+        ${labelStatus(station.Essence)}
+        <br>
 
-  const petrole =
-    labelStatus(
-      station.Petrole
-    );
+        Gasoil :
+        ${labelStatus(station.Gasoil)}
+        <br>
 
+        Pétrole :
+        ${labelStatus(station.Petrole)}
 
-  const date =
-    station._submission_time
+        <br><br>
 
-      ? new Date(
-          station._submission_time
-        ).toLocaleString(
-          "fr-FR"
-        )
-
-      : "Non renseignée";
-
-
-  return `
-
-    <div class="station-popup">
-
-      <h3>
-        ⛽ ${stationLabel(
-          station.station
-        )}
-      </h3>
-
-
-      <table>
-
-        <tr>
-
-          <td>
-            <strong>
-              Essence
-            </strong>
-          </td>
-
-          <td>
-            ${essence.icon}
-            ${essence.text}
-          </td>
-
-        </tr>
-
-
-        <tr>
-
-          <td>
-            <strong>
-              Gasoil
-            </strong>
-          </td>
-
-          <td>
-            ${gasoil.icon}
-            ${gasoil.text}
-          </td>
-
-        </tr>
-
-
-        <tr>
-
-          <td>
-            <strong>
-              Pétrole
-            </strong>
-          </td>
-
-          <td>
-            ${petrole.icon}
-            ${petrole.text}
-          </td>
-
-        </tr>
-
-      </table>
-
-
-      <p>
-
-        <small>
-
-          Dernière mise à jour :
-          ${date}
-
-        </small>
-
-      </p>
-
-    </div>
-
-  `;
-
+        Mise à jour :
+        ${station._submission_time
+            ? new Date(
+                station._submission_time
+              ).toLocaleString("fr-FR")
+            : "Non renseignée"
+        }
+    `;
 }
 
+function addMarker(station) {
 
-// ============================================================
-// 10. LÉGENDE
-// ============================================================
+    const color = markerColor(station);
 
-const legend =
-  L.control({
-    position:
-      "bottomright"
-  });
+    const icon = L.divIcon({
 
+        className: "",
 
-legend.onAdd =
-  function () {
+        html: `
+            <div style="
+                background:${color};
+                width:32px;
+                height:32px;
+                border-radius:50%;
+                border:3px solid white;
+                box-shadow:0 0 5px #555;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:17px;
+            ">⛽</div>
+        `,
 
-    const div =
-      L.DomUtil.create(
-        "div",
-        "map-legend"
-      );
+        iconSize: [38, 38],
 
+        iconAnchor: [19, 19]
+    });
 
-    div.innerHTML = `
+    L.marker(
+        [
+            Number(station.latitude_station),
+            Number(station.longitude_station)
+        ],
+        { icon }
+    )
+    .bindPopup(popupFor(station))
+    .addTo(markersLayer);
+}
 
-      <strong>
-        Légende
-      </strong>
+function fillRegions() {
 
+    regionSelect.innerHTML =
+        `<option value="">Toutes les régions</option>`;
 
-      <div>
+    ADMIN_DATA.forEach(region => {
 
-        <span style="
-          display:inline-block;
-          width:14px;
-          height:14px;
-          background:green;
-          border-radius:50%;
-          margin-right:6px;
-        "></span>
+        const option =
+            document.createElement("option");
 
-        Disponible
+        option.value = region.code;
 
-      </div>
+        option.textContent = region.name;
 
+        regionSelect.appendChild(option);
+    });
+}
 
-      <div>
+function fillCercles(regionCode) {
 
-        <span style="
-          display:inline-block;
-          width:14px;
-          height:14px;
-          background:orange;
-          border-radius:50%;
-          margin-right:6px;
-        "></span>
+    cercleSelect.innerHTML =
+        `<option value="">Tous</option>`;
 
-        Stock limité
+    communeSelect.innerHTML =
+        `<option value="">Tous</option>`;
 
-      </div>
+    if (!regionCode) {
 
+        cercleSelect.disabled = true;
 
-      <div>
+        communeSelect.disabled = true;
 
-        <span style="
-          display:inline-block;
-          width:14px;
-          height:14px;
-          background:red;
-          border-radius:50%;
-          margin-right:6px;
-        "></span>
+        document.getElementById("cercleLabel").textContent =
+            "Cercle / Arrondissement";
 
-        Indisponible
+        document.getElementById("communeLabel").textContent =
+            "Commune / Quartier";
 
-      </div>
+        return;
+    }
 
-    `;
+    const region =
+        ADMIN_DATA.find(
+            r => r.code === regionCode
+        );
 
+    if (!region) return;
 
-    return div;
+    cercleSelect.disabled = false;
 
-  };
+    if (region.type === "district") {
 
+        document.getElementById("cercleLabel").textContent =
+            "Arrondissement";
 
-legend.addTo(map);
+        document.getElementById("communeLabel").textContent =
+            "Quartier";
 
+    } else {
 
-// ============================================================
-// 11. CHARGEMENT DES STATIONS
-// ============================================================
+        document.getElementById("cercleLabel").textContent =
+            "Cercle";
+
+        document.getElementById("communeLabel").textContent =
+            "Commune";
+    }
+
+    region.cercles.forEach(cercle => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = cercle.code;
+
+        option.textContent = cercle.name;
+
+        cercleSelect.appendChild(option);
+    });
+}
+
+function fillCommunes(regionCode, cercleCode) {
+
+    communeSelect.innerHTML =
+        `<option value="">Tous</option>`;
+
+    if (!regionCode || !cercleCode) {
+
+        communeSelect.disabled = true;
+
+        return;
+    }
+
+    const region =
+        ADMIN_DATA.find(
+            r => r.code === regionCode
+        );
+
+    if (!region) return;
+
+    const cercle =
+        region.cercles.find(
+            c => c.code === cercleCode
+        );
+
+    if (!cercle) return;
+
+    communeSelect.disabled = false;
+
+    cercle.communes.forEach(commune => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = commune.code;
+
+        option.textContent = commune.name;
+
+        communeSelect.appendChild(option);
+    });
+}
+
+function getFilteredStations() {
+
+    const regionCode =
+        regionSelect.value;
+
+    const cercleCode =
+        cercleSelect.value;
+
+    const communeCode =
+        communeSelect.value;
+
+    return allStations.filter(station => {
+
+        const admin =
+            STATION_ADMIN[station.station];
+
+        if (!admin) return false;
+
+        if (
+            regionCode &&
+            admin.region !== regionCode
+        ) {
+            return false;
+        }
+
+        if (
+            cercleCode &&
+            admin.cercle !== cercleCode
+        ) {
+            return false;
+        }
+
+        if (
+            communeCode &&
+            admin.commune !== communeCode
+        ) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+function displayStations() {
+
+    markersLayer.clearLayers();
+
+    const stations =
+        getFilteredStations();
+
+    stations.forEach(addMarker);
+
+    document.getElementById("status").textContent =
+        `${stations.length} station(s) affichée(s)`;
+
+    if (stations.length > 0) {
+
+        const bounds =
+            L.latLngBounds(
+                stations.map(station => [
+                    Number(station.latitude_station),
+                    Number(station.longitude_station)
+                ])
+            );
+
+        map.fitBounds(
+            bounds,
+            { padding: [40, 40] }
+        );
+    }
+}
+
+regionSelect.addEventListener(
+    "change",
+    () => {
+
+        fillCercles(
+            regionSelect.value
+        );
+
+        displayStations();
+    }
+);
+
+cercleSelect.addEventListener(
+    "change",
+    () => {
+
+        fillCommunes(
+            regionSelect.value,
+            cercleSelect.value
+        );
+
+        displayStations();
+    }
+);
+
+communeSelect.addEventListener(
+    "change",
+    displayStations
+);
 
 async function loadStations() {
 
-  try {
+    try {
 
+        const response =
+            await fetch(API_URL);
 
-    // --------------------------------------------------------
-    // Récupérer les données du Worker
-    // --------------------------------------------------------
+        const data =
+            await response.json();
 
-    const response =
-      await fetch(API_URL);
+        const records =
+            data.results || [];
 
+        const latest =
+            {};
 
-    if (!response.ok) {
+        records.forEach(record => {
 
-      throw new Error(
-        `HTTP ${response.status}`
-      );
-
-    }
-
-
-    // --------------------------------------------------------
-    // Transformer la réponse en JSON
-    // --------------------------------------------------------
-
-    const data =
-      await response.json();
-
-
-    // --------------------------------------------------------
-    // Récupérer tous les enregistrements Kobo
-    // --------------------------------------------------------
-
-    const allStations =
-      data.results || [];
-
-
-    if (!allStations.length) {
-
-      statusBox.textContent =
-        "Aucune station trouvée.";
-
-      return;
-
-    }
-
-
-    // ========================================================
-    // 12. FILTRER LES NOUVEAUX ENREGISTREMENTS
-    // ========================================================
-
-    const validStations =
-      allStations.filter(
-        station => {
-
-          const lat =
-            Number(
-              station.latitude_station
-            );
-
-          const lon =
-            Number(
-              station.longitude_station
-            );
-
-
-          return (
-
-            station.station &&
-
-            Number.isFinite(lat) &&
-
-            Number.isFinite(lon)
-
-          );
-
-        }
-      );
-
-
-    // ========================================================
-    // 13. GARDER LA DERNIÈRE MISE À JOUR
-    // ========================================================
-
-    const latestStations =
-      new Map();
-
-
-    validStations.forEach(
-      station => {
-
-        const stationCode =
-          station.station;
-
-
-        const existing =
-          latestStations.get(
-            stationCode
-          );
-
-
-        // ----------------------------------------------------
-        // Si la station n'existe pas encore
-        // ----------------------------------------------------
-
-        if (!existing) {
-
-          latestStations.set(
-            stationCode,
-            station
-          );
-
-          return;
-
-        }
-
-
-        // ----------------------------------------------------
-        // Comparer les dates
-        // ----------------------------------------------------
-
-        const newDate =
-          new Date(
-            station._submission_time
-          );
-
-        const oldDate =
-          new Date(
-            existing._submission_time
-          );
-
-
-        // ----------------------------------------------------
-        // Conserver uniquement la plus récente
-        // ----------------------------------------------------
-
-        if (newDate > oldDate) {
-
-          latestStations.set(
-            stationCode,
-            station
-          );
-
-        }
-
-      }
-    );
-
-
-    // Transformer la Map en tableau
-
-    const stations =
-      Array.from(
-        latestStations.values()
-      );
-
-
-    // ========================================================
-    // 14. SUPPRIMER LES ANCIENS MARQUEURS
-    // ========================================================
-
-    map.eachLayer(
-      function (layer) {
-
-        if (
-          layer instanceof L.Marker
-        ) {
-
-          map.removeLayer(
-            layer
-          );
-
-        }
-
-      }
-    );
-
-
-    // ========================================================
-    // 15. AJOUTER LES STATIONS
-    // ========================================================
-
-    const bounds = [];
-
-
-    stations.forEach(
-      station => {
-
-
-        const lat =
-          Number(
-            station.latitude_station
-          );
-
-
-        const lon =
-          Number(
-            station.longitude_station
-          );
-
-
-        // ----------------------------------------------------
-        // Vérification des coordonnées
-        // ----------------------------------------------------
-
-        if (
-
-          !Number.isFinite(lat) ||
-
-          !Number.isFinite(lon)
-
-        ) {
-
-          return;
-
-        }
-
-
-        // ----------------------------------------------------
-        // Déterminer la couleur
-        // ----------------------------------------------------
-
-        const color =
-          markerColor(
-            station
-          );
-
-
-        // ----------------------------------------------------
-        // Créer le marqueur
-        // ----------------------------------------------------
-
-        const marker =
-          L.marker(
-
-            [
-              lat,
-              lon
-            ],
-
-            {
-              icon:
-                createStationIcon(
-                  color
-                )
+            if (
+                !record.station ||
+                !record.latitude_station ||
+                !record.longitude_station
+            ) {
+                return;
             }
 
-          ).addTo(map);
+            const old =
+                latest[record.station];
 
+            if (
+                !old ||
+                new Date(record._submission_time)
+                >
+                new Date(old._submission_time)
+            ) {
 
-        // ----------------------------------------------------
-        // Ajouter la popup
-        // ----------------------------------------------------
+                latest[record.station] =
+                    record;
+            }
+        });
 
-        marker.bindPopup(
-          popupFor(
-            station
-          )
-        );
+        allStations =
+            Object.values(latest);
 
+        displayStations();
 
-        // ----------------------------------------------------
-        // Ajouter aux limites
-        // ----------------------------------------------------
+    } catch (error) {
 
-        bounds.push(
-          [
-            lat,
-            lon
-          ]
-        );
+        console.error(error);
 
-      }
-    );
-
-
-    // ========================================================
-    // 16. AJUSTER LA CARTE
-    // ========================================================
-
-    if (
-      bounds.length === 1
-    ) {
-
-      map.setView(
-        bounds[0],
-        14
-      );
-
+        document.getElementById("status").textContent =
+            "Impossible de charger les stations.";
     }
-
-    else if (
-      bounds.length > 1
-    ) {
-
-      map.fitBounds(
-        bounds,
-        {
-          padding: [
-            30,
-            30
-          ]
-        }
-      );
-
-    }
-
-
-    // ========================================================
-    // 17. MESSAGE D'ÉTAT
-    // ========================================================
-
-    statusBox.textContent =
-
-      `${stations.length} station(s) chargée(s) — actualisation automatique toutes les 2 minutes.`;
-
-
-  }
-
-  catch (error) {
-
-
-    // --------------------------------------------------------
-    // Afficher l'erreur dans la console
-    // --------------------------------------------------------
-
-    console.error(
-      error
-    );
-
-
-    // --------------------------------------------------------
-    // Message visible sur la carte
-    // --------------------------------------------------------
-
-    statusBox.textContent =
-
-      "Impossible de récupérer les données Kobo. Vérifie la connexion et l'accès à l'API.";
-
-  }
-
 }
 
+fillRegions();
 
-// ============================================================
-// 18. PREMIER CHARGEMENT
-// ============================================================
+fillCercles("");
 
 loadStations();
 
-
-// ============================================================
-// 19. ACTUALISATION AUTOMATIQUE
-// ============================================================
-
-// 120 000 millisecondes = 2 minutes
-
 setInterval(
-  loadStations,
-  120000
+    loadStations,
+    120000
 );
